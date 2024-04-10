@@ -40,23 +40,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 18),
               ),
             )
-          : ListView(
-              children: List.generate(
-                marketList.length,
-                (index) {
-                  Market model = marketList[index];
-                  return ListTile(
-                    leading: const Icon(Icons.list_alt_rounded),
-                    title: Text(model.name),
-                    subtitle: Text(model.id),
-                  );
-                },
+          : RefreshIndicator(
+              onRefresh: () {
+                return refresh();
+              },
+              child: ListView(
+                children: List.generate(
+                  marketList.length,
+                  (index) {
+                    Market model = marketList[index];
+                    return Dismissible(
+                      key: ValueKey<Market>(model),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onDismissed: (direction) {
+                        remove(model);
+                      },
+                      child: ListTile(
+                        onLongPress: () {
+                          showFormModal(model: model);
+                        },
+                        leading: const Icon(Icons.list_alt_rounded),
+                        title: Text(model.name),
+                        subtitle: Text(model.id),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
     );
   }
 
-  showFormModal() {
+  showFormModal({Market? model}) {
     // Labels à serem mostradas no Modal
     String title = "Adicionar Listin";
     String confirmationButton = "Salvar";
@@ -64,6 +88,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Controlador do campo que receberá o nome do Listin
     TextEditingController nameController = TextEditingController();
+
+    if (model != null) {
+      title = "Editando feira de ${model.name}";
+      nameController.text = model.name;
+    }
 
     // Função do Flutter que mostra o modal na tela
     showModalBottomSheet(
@@ -105,23 +134,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 16,
                   ),
                   ElevatedButton(
-                      onPressed: () {
+                    onPressed: () {
+                      Market market = Market(
+                        id: const Uuid().v1(),
+                        name: nameController.text,
+                      );
 
-                        Market market = Market(
-                          id: const Uuid().v1(),
-                          name: nameController.text,
-                        );
+                      if (model != null) {
+                        market.id = model.id;
+                      }
 
-                        db
-                            .collection("market")
-                            .doc(market.id)
-                            .set(market.toMap());
+                      db
+                          .collection("market")
+                          .doc(market.id)
+                          .set(market.toMap());
 
-                        refresh();
+                      refresh();
 
-                        Navigator.pop(context);
-                      },
-                      child: Text(confirmationButton)),
+                      Navigator.pop(context);
+                    },
+                    child: Text(confirmationButton),
+                  ),
                 ],
               )
             ],
@@ -134,7 +167,8 @@ class _HomeScreenState extends State<HomeScreen> {
   refresh() async {
     List<Market> temp = [];
 
-    QuerySnapshot<Map<String, dynamic>> snapshot = await db.collection("market").get();
+    QuerySnapshot<Map<String, dynamic>> snapshot =
+        await db.collection("market").get();
 
     for (var doc in snapshot.docs) {
       temp.add(Market.fromMap(doc.data()));
@@ -143,5 +177,10 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       marketList = temp;
     });
+  }
+
+  void remove(Market model) {
+    db.collection("market").doc(model.id).delete();
+    refresh();
   }
 }
