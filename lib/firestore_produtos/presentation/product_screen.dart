@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mercadinho/firestore_produtos/helpers/enum_order.dart';
 import 'package:uuid/uuid.dart';
 import '../../firestore/models/listin.dart';
 import '../model/product.dart';
@@ -17,8 +18,10 @@ class ProductScreen extends StatefulWidget {
 class _ProductScreenState extends State<ProductScreen> {
   FirebaseFirestore db = FirebaseFirestore.instance;
 
-  List<Product> listPlannedProducts = [];
+  EnumOrder enumOrder = EnumOrder.name;
+  bool isDescending = false;
 
+  List<Product> listPlannedProducts = [];
   List<Product> listCaughtProducts = [];
 
   @override
@@ -30,7 +33,42 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.market.name)),
+      appBar: AppBar(
+        title: Text(widget.market.name),
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) {
+              return [
+                const PopupMenuItem(
+                  value: EnumOrder.name,
+                  child: Text("Ordenar por nome"),
+                ),
+                const PopupMenuItem(
+                  value: EnumOrder.amount,
+                  child: Text("Ordenar por quantidade"),
+                ),
+                const PopupMenuItem(
+                  value: EnumOrder.price,
+                  child: Text("Ordenar por preço"),
+                ),
+              ];
+            },
+            onSelected: (value) {
+              setState(
+                () {
+                  if (enumOrder == value) {
+                    isDescending = !isDescending;
+                  } else {
+                    enumOrder = value;
+                    isDescending = false;
+                  }
+                },
+              );
+              refresh();
+            },
+          )
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showFormModal();
@@ -259,23 +297,17 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   refresh() async {
-    List<Product> tempPlanned = await filterProducts(false);
-    List<Product> tempPurchased = await filterProducts(true);
-
-    setState(() {
-      listPlannedProducts = tempPlanned;
-      listCaughtProducts = tempPurchased;
-    });
-  }
-
-  Future<List<Product>> filterProducts(bool isPurchased) async {
     List<Product> temp = [];
 
     QuerySnapshot<Map<String, dynamic>> snapshot = await db
         .collection("market")
         .doc(widget.market.id)
         .collection("product")
-        .where("isPurchased", isEqualTo: true)
+        // .where("isPurchased", isEqualTo: true)
+        .orderBy(
+          enumOrder.name,
+          descending: isDescending,
+        )
         .get();
 
     for (var doc in snapshot.docs) {
@@ -283,7 +315,25 @@ class _ProductScreenState extends State<ProductScreen> {
       temp.add(product);
     }
 
-    return temp;
+    filterProducts(temp);
+  }
+
+  filterProducts(List<Product> productList) async {
+    List<Product> tempPlanned = [];
+    List<Product> tempTakes = [];
+
+    for (var product in productList) {
+      if (product.isPurchased) {
+        tempTakes.add(product);
+      } else {
+        tempPlanned.add(product);
+      }
+    }
+
+    setState(() {
+      listPlannedProducts = tempPlanned;
+      listCaughtProducts = tempTakes;
+    });
   }
 
   toggleProduct(Product product) async {
