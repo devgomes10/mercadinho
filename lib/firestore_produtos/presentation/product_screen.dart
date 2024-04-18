@@ -45,8 +45,8 @@ class _ProductScreenState extends State<ProductScreen> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Column(
-                children: const [
+              child: const Column(
+                children: [
                   Text(
                     "R\$${0}",
                     style: TextStyle(fontSize: 42),
@@ -72,11 +72,12 @@ class _ProductScreenState extends State<ProductScreen> {
             ),
             Column(
               children: List.generate(listPlannedProducts.length, (index) {
-                Product produto = listPlannedProducts[index];
+                Product product = listPlannedProducts[index];
                 return ListTileProduct(
-                  product: produto,
+                  product: product,
                   isPurchased: false,
                   showModal: showFormModal,
+                  iconClick: toggleProduct,
                 );
               }),
             ),
@@ -94,11 +95,12 @@ class _ProductScreenState extends State<ProductScreen> {
             ),
             Column(
               children: List.generate(listCaughtProducts.length, (index) {
-                Product produto = listCaughtProducts[index];
+                Product product = listCaughtProducts[index];
                 return ListTileProduct(
                   showModal: showFormModal,
-                  product: produto,
+                  product: product,
                   isPurchased: true,
+                  iconClick: toggleProduct,
                 );
               }),
             ),
@@ -155,7 +157,8 @@ class _ProductScreenState extends State<ProductScreen> {
           // Formulário com Título, Campo e Botões
           child: ListView(
             children: [
-              Text(labelTitle, style: Theme.of(context).textTheme.headline5),
+              Text(labelTitle,
+                  style: Theme.of(context).textTheme.headlineSmall),
               TextFormField(
                 controller: nameController,
                 keyboardType: TextInputType.name,
@@ -256,12 +259,23 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   refresh() async {
+    List<Product> tempPlanned = await filterProducts(false);
+    List<Product> tempPurchased = await filterProducts(true);
+
+    setState(() {
+      listPlannedProducts = tempPlanned;
+      listCaughtProducts = tempPurchased;
+    });
+  }
+
+  Future<List<Product>> filterProducts(bool isPurchased) async {
     List<Product> temp = [];
 
     QuerySnapshot<Map<String, dynamic>> snapshot = await db
         .collection("market")
         .doc(widget.market.id)
         .collection("product")
+        .where("isPurchased", isEqualTo: true)
         .get();
 
     for (var doc in snapshot.docs) {
@@ -269,8 +283,19 @@ class _ProductScreenState extends State<ProductScreen> {
       temp.add(product);
     }
 
-    setState(() {
-      listPlannedProducts = temp;
-    });
+    return temp;
+  }
+
+  toggleProduct(Product product) async {
+    product.isPurchased = !product.isPurchased;
+
+    await db
+        .collection("market")
+        .doc(widget.market.id)
+        .collection("product")
+        .doc(product.id)
+        .update({"isPurchased": product.isPurchased});
+
+    refresh();
   }
 }
