@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mercadinho/firestore_produtos/helpers/enum_order.dart';
@@ -21,13 +23,22 @@ class _ProductScreenState extends State<ProductScreen> {
   EnumOrder enumOrder = EnumOrder.name;
   bool isDescending = false;
 
+  late StreamSubscription listener;
+
   List<Product> listPlannedProducts = [];
   List<Product> listCaughtProducts = [];
 
   @override
   void initState() {
-    refresh();
+    // refresh();
+    setupListeners();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    listener.cancel();
+    super.dispose();
   }
 
   @override
@@ -280,7 +291,7 @@ class _ProductScreenState extends State<ProductScreen> {
                           .set(product.toMap());
 
                       // Atualizar a lista
-                      refresh();
+                      // refresh();
 
                       // Fechar o Modal
                       Navigator.pop(context);
@@ -296,14 +307,13 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
-  refresh() async {
+  refresh({QuerySnapshot<Map<String, dynamic>>? snapshot}) async {
     List<Product> temp = [];
 
-    QuerySnapshot<Map<String, dynamic>> snapshot = await db
+    snapshot ??= await db
         .collection("market")
         .doc(widget.market.id)
         .collection("product")
-        // .where("isPurchased", isEqualTo: true)
         .orderBy(
           enumOrder.name,
           descending: isDescending,
@@ -346,6 +356,23 @@ class _ProductScreenState extends State<ProductScreen> {
         .doc(product.id)
         .update({"isPurchased": product.isPurchased});
 
-    refresh();
+    // refresh();
+  }
+
+  setupListeners() {
+    listener = db
+        .collection("market")
+        .doc(widget.market.id)
+        .collection("products")
+        .orderBy(
+          enumOrder.name,
+          descending: isDescending,
+        )
+        .snapshots()
+        .listen(
+      (snapshot) {
+        refresh(snapshot: snapshot);
+      },
+    );
   }
 }
