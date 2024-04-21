@@ -94,13 +94,13 @@ class _ProductScreenState extends State<ProductScreen> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: const Column(
+              child: Column(
                 children: [
                   Text(
-                    "R\$${0}",
+                    "R\$${calculatePriceTakes()}",
                     style: TextStyle(fontSize: 42),
                   ),
-                  Text(
+                  const Text(
                     "total previsto para essa compra",
                     style: TextStyle(fontStyle: FontStyle.italic),
                   ),
@@ -127,6 +127,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   isPurchased: false,
                   showModal: showFormModal,
                   iconClick: toggleProduct,
+                  trailClick: productRemove,
                 );
               }),
             ),
@@ -150,6 +151,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   product: product,
                   isPurchased: true,
                   iconClick: toggleProduct,
+                  trailClick: productRemove,
                 );
               }),
             ),
@@ -374,5 +376,24 @@ class _ProductScreenState extends State<ProductScreen> {
         refresh(snapshot: snapshot);
       },
     );
+  }
+
+  productRemove(Product product) async {
+    await db
+        .collection("market")
+        .doc(widget.market.id)
+        .collection("product")
+        .doc(product.id)
+        .delete();
+  }
+
+  double calculatePriceTakes() {
+    double total = 0;
+    for (Product product in listCaughtProducts) {
+      if (product.amount != null && product.price != null) {
+        total += (product.amount! * product.price!);
+      }
+    }
+    return total;
   }
 }

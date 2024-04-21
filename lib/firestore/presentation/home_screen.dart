@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Listin - Feira Colaborativa"),
+        title: const Text("Mercadinho"),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -80,7 +80,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         leading: const Icon(Icons.list_alt_rounded),
                         title: Text(model.name),
-                        subtitle: Text(model.id),
                       ),
                     );
                   },

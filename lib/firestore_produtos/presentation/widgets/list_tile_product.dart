@@ -6,6 +6,7 @@ class ListTileProduct extends StatelessWidget {
   final bool isPurchased;
   final Function showModal;
   final Function iconClick;
+  final Function trailClick;
 
   const ListTileProduct({
     super.key,
@@ -13,6 +14,7 @@ class ListTileProduct extends StatelessWidget {
     required this.isPurchased,
     required this.showModal,
     required this.iconClick,
+    required this.trailClick,
   });
 
   @override
@@ -25,7 +27,7 @@ class ListTileProduct extends StatelessWidget {
         onPressed: () {
           iconClick(product);
         },
-         icon: Icon(
+        icon: Icon(
           (isPurchased) ? Icons.shopping_basket : Icons.check,
         ),
       ),
@@ -38,6 +40,15 @@ class ListTileProduct extends StatelessWidget {
         (product.price == null)
             ? "Clique para adicionar preço"
             : "R\$ ${product.price!}",
+      ),
+      trailing: IconButton(
+        onPressed: () {
+          trailClick(product);
+        },
+        icon: const Icon(
+          Icons.delete,
+          color: Colors.red,
+        ),
       ),
     );
   }
