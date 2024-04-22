@@ -98,7 +98,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 children: [
                   Text(
                     "R\$${calculatePriceTakes()}",
-                    style: TextStyle(fontSize: 42),
+                    style: const TextStyle(fontSize: 42),
                   ),
                   const Text(
                     "total previsto para essa compra",
@@ -120,16 +120,19 @@ class _ProductScreenState extends State<ProductScreen> {
               ),
             ),
             Column(
-              children: List.generate(listPlannedProducts.length, (index) {
-                Product product = listPlannedProducts[index];
-                return ListTileProduct(
-                  product: product,
-                  isPurchased: false,
-                  showModal: showFormModal,
-                  iconClick: toggleProduct,
-                  trailClick: productRemove,
-                );
-              }),
+              children: List.generate(
+                listPlannedProducts.length,
+                (index) {
+                  Product product = listPlannedProducts[index];
+                  return ListTileProduct(
+                    product: product,
+                    isPurchased: false,
+                    showModal: showFormModal,
+                    iconClick: toggleProduct,
+                    trailClick: productRemove,
+                  );
+                },
+              ),
             ),
             const Padding(
               padding: EdgeInsets.all(8.0),
@@ -144,16 +147,19 @@ class _ProductScreenState extends State<ProductScreen> {
               ),
             ),
             Column(
-              children: List.generate(listCaughtProducts.length, (index) {
-                Product product = listCaughtProducts[index];
-                return ListTileProduct(
-                  showModal: showFormModal,
-                  product: product,
-                  isPurchased: true,
-                  iconClick: toggleProduct,
-                  trailClick: productRemove,
-                );
-              }),
+              children: List.generate(
+                listCaughtProducts.length,
+                (index) {
+                  Product product = listCaughtProducts[index];
+                  return ListTileProduct(
+                    showModal: showFormModal,
+                    product: product,
+                    isPurchased: true,
+                    iconClick: toggleProduct,
+                    trailClick: productRemove,
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -208,8 +214,13 @@ class _ProductScreenState extends State<ProductScreen> {
           // Formulário com Título, Campo e Botões
           child: ListView(
             children: [
-              Text(labelTitle,
-                  style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                labelTitle,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
               TextFormField(
                 controller: nameController,
                 keyboardType: TextInputType.name,
@@ -365,7 +376,7 @@ class _ProductScreenState extends State<ProductScreen> {
     listener = db
         .collection("market")
         .doc(widget.market.id)
-        .collection("products")
+        .collection("product")
         .orderBy(
           enumOrder.name,
           descending: isDescending,

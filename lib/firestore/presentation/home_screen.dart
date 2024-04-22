@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   showFormModal({Market? model}) {
     // Labels à serem mostradas no Modal
-    String title = "Adicionar Listin";
+    String title = "Adicionar feira";
     String confirmationButton = "Salvar";
     String skipButton = "Cancelar";
 
@@ -122,10 +122,12 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView(
             children: [
               Text(title, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 20,),
               TextFormField(
                 controller: nameController,
-                decoration:
-                    const InputDecoration(label: Text("Nome do Listin")),
+                decoration: const InputDecoration(
+                  label: Text("Nome da feira"),
+                ),
               ),
               const SizedBox(
                 height: 16,
